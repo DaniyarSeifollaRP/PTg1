@@ -3,88 +3,73 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.IO; // для streamreader и для streamwriter и directery info 
+using MySnake.Model;
 
-
-namespace FarManager
+namespace MySnake
 {
-    public class State
-    {
-        private int index;
-        public int Index
-        {
-            get { return index; }
-            set
-            {
-                int maxVal = Folder.GetDirectories().Length;
-                if (value >= 0 && value < maxVal)
-                {
-                    index = value;
-                }
-            }
-        }
-        public DirectoryInfo Folder { get; set; }
-    }
-}
-
-
-
-
     class Program
     {
-        static void ShowFolderContent(State state)
-        {
-            Console.Clear();
-            DirectoryInfo[] list = state.Folder.GetDirectories(); //возвращает данные, которые расположены в текущей папке  
-            for (int i = 0; i < list.Length; ++i) //пробегаемся 
-            {
-                if (state.Index == i) //если индекс равно i
-                {
-                    Console.BackgroundColor = ConsoleColor.White; //цвет фона
-                    Console.ForegroundColor = ConsoleColor.Black; //цвет самого текста
-                }
-                Console.Write(list[i]);
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(); // выводим на экран
-            }
-
-            foreach (FileInfo f in state.Folder.GetFiles()) //просмотриваем все файлы
-            {
-                Console.WriteLine(f.Name); // пишем файл и название
-            }
-        }
 
         static void Main(string[] args)
         {
-            bool alive = true;  
-            State state = new State { Folder = new DirectoryInfo(@"C:\") }; //создаем новый State, в которым мы создаем новый DirectoryInfo
-            Stack<State> layers = new Stack<State>();
-            layers.Push(state); // Push указывает папку, которая находится под индексом 0 // pusg - засосывает  в stack
-            while (alive)
+            Game.Init();
             {
-                ShowFolderContent(layers.Peek()); // показывает , что внутри папки 
-                ConsoleKeyInfo pressedKey = Console.ReadKey();
-                switch (pressedKey.Key) // управление
+
+                Int32 i = 0;
+                Console.CursorVisible = false;
+                Console.SetWindowSize(70, 25);
+
+
+                while (!Game.GameOver)
                 {
-                    case ConsoleKey.UpArrow:
-                        layers.Peek().Index--; // peek - просмтаривает
-                        break;
-                    case ConsoleKey.DownArrow:
-                        layers.Peek().Index++; // 
-                        break;
-                    case ConsoleKey.Escape:
-                        layers.Pop();  // удаляет 
-                        break;
-                    case ConsoleKey.Enter:
-                        DirectoryInfo[] list = layers.Peek().Folder.GetDirectories(); // показывает , что внутри папки
-                        State newState = new State
-                        {
-                            Folder = new DirectoryInfo(list[state.Index].FullName),
-                            Index = 0
-                        };
-                        layers.Push(newState); // push добавляет
-                        break;
+                    Game.Draw();
+
+
+
+
+                    ConsoleKeyInfo btn = Console.ReadKey();
+                    switch (btn.Key)
+                    {
+                        case ConsoleKey.UpArrow:
+                            Game.snake.Move(0, -1);
+                            Console.Clear();
+                            break;
+                        case ConsoleKey.DownArrow:
+                            Game.snake.Move(0, 1);
+                            Console.Clear();
+                            break;
+                        case ConsoleKey.LeftArrow:
+                            Game.snake.Move(-1, 0);
+                            Console.Clear();
+                            break;
+                        case ConsoleKey.RightArrow:
+                            Game.snake.Move(1, 0);
+                            Console.Clear();
+                            break;
+                        case ConsoleKey.Escape:
+                            Game.GameOver = true;
+                            break;
+                        case ConsoleKey.F2:
+                            Game.Serialize();
+                            Console.Clear();
+                            break;
+                        case ConsoleKey.F3:
+                            Game.Derialize();
+                            Console.Clear();
+                            break;
+
+
+                    }
+                    // TODO: remove following expressions and put them in right Class
+                    if (Game.snake.CanEat(Game.food))
+                    {
+                        Game.food.SetRandomPosition();
+                    }
+                    if (Game.snake.body.Count == 4)
+                    {
+                        Game.wall.LoadLevel(2);
+                    }
+
                 }
 
             }
